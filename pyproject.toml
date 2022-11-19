@@ -1,0 +1,57 @@
+# https://setuptools.pypa.io/en/latest/userguide/quickstart.html#basic-use
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+[project]
+name = "django-test-urls"
+description="A package used to test URL dispatching in Django applications."
+readme = "README.rst"
+requires-python = ">=3.7"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Alan Verresen", email = "dev@alanverresen.com" },
+]
+maintainers = [
+  # none
+]
+keywords = [
+    "Django",
+    "URL", "URL dispatch",
+    "test", "testing"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Framework :: Django",
+    "Framework :: Django :: 3",
+    "Framework :: Django :: 3.0",
+    "Framework :: Django :: 3.1",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Testing",
+]
+dynamic = ["version", "dependencies"]
+
+
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#setuptools-specific-configuration
+[tool.setuptools]
+packages = ["django_test_urls"]
+include-package-data = true
+
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#dynamic-metadata
+[tool.setuptools.dynamic]
+version = { attr = "django_test_urls.VERSION" }
+dependencies = { file = "requirements.txt" }

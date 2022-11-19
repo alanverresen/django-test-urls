@@ -1,0 +1,6 @@
+# uses tox for automation
+tox >= 3.12
+
+# uses pytest for testing
+pytest
+pytest-django
