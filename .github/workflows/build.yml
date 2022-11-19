@@ -2,50 +2,14 @@ name: build
 on: [push]
 jobs:
     build:
-
         runs-on: ubuntu-latest
-        strategy:
-
-            # test each combination of Django and supported versions of Python
-            # - list of supported versions of Django:
-            #   https://www.djangoproject.com/download/#supported-versions
-            # - notes of X.Y.0 releases list supported Python versions
-            #   https://docs.djangoproject.com/en/dev/releases/
-            # - list of supported versions of Python:
-            #   https://devguide.python.org/versions/
-            matrix:
-                include:
-                    # Django 3.2 (supported until April 2024 - LTS)
-                    - django-version: "3.2.0"
-                      python-version: "3.7"
-                    - django-version: "3.2.0"
-                      python-version: "3.8"
-                    - django-version: "3.2.0"
-                      python-version: "3.9"
-                    - django-version: "3.2.0"
-                      python-version: "3.10"
-                    # Django 4.0 (supported until April 2023)
-                    - django-version: "4.0.0"
-                      python-version: "3.8"
-                    - django-version: "4.0.0"
-                      python-version: "3.9"
-                    - django-version: "4.0.0"
-                      python-version: "3.10"
-                    # Django 4.1 (supported until December 2023)
-                    - django-version: "4.1.0"
-                      python-version: "3.8"
-                    - django-version: "4.1.0"
-                      python-version: "3.9"
-                    - django-version: "4.1.0"
-                      python-version: "3.10"
-
         steps:
             -   uses: actions/checkout@v3
 
-            -   name: Set up Python ${{ matrix.python-version }}
+            -   name: Set up Python
                 uses: actions/setup-python@v4
                 with:
-                    python-version: ${{ matrix.python-version }}
+                    python-version: '3.10'
 
             -   name: Update Pip
                 run: |
@@ -53,7 +17,7 @@ jobs:
 
             -   name: Install dependencies
                 run: |
-                    python -m pip install tox django~=${{ matrix.django-version }}
+                    python -m pip install tox django
 
             -   name: Test with Tox
                 run: |

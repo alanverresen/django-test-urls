@@ -6,6 +6,10 @@ django-test-urls 0.1.1
     :target: https://github.com/alanverresen/django-test-urls/actions/workflows/build.yml
     :alt: Build Status
 
+.. image:: https://github.com/alanverresen/django-test-urls/actions/workflows/tests.yml/badge.svg
+    :target: https://github.com/alanverresen/django-test-urls/actions/workflows/tests.yml
+    :alt: Tests Status
+
 .. image:: https://readthedocs.org/projects/django-test-urls/badge/?version=latest
     :target: https://django-test-urls.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
