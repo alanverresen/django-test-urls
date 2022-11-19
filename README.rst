@@ -2,6 +2,14 @@
 django-test-urls 0.1.1
 ##############################################################################
 
+.. image:: https://github.com/alanverresen/django-test-urls/actions/workflows/build.yml/badge.svg
+    :target: https://github.com/alanverresen/django-test-urls/actions/workflows/build.yml
+    :alt: Build Status
+
+.. image:: https://readthedocs.org/projects/django-test-urls/badge/?version=latest
+    :target: https://django-test-urls.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 This small Python package defines a small set of functions that can be used
 to test the mapping of URLs in a Django application:
 
