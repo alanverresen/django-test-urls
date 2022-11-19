@@ -85,7 +85,7 @@ fi
 clean_build
 
 # Build package.
-python setup.py sdist bdist_wheel || \
+python -m build || \
     (clean_build && echo "failed to build package" && exit 1)
 
 # Check package.

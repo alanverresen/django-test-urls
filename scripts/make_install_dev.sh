@@ -15,5 +15,5 @@ fi
 . .venv/bin/activate
 
 # Install developer tools and package dependencies.
-python3 -m pip install --upgrade twine tox bump2version
+python3 -m pip install --upgrade -r requirements-dev.txt
 python3 -m pip install --upgrade -r requirements.txt

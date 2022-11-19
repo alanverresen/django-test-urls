@@ -4,3 +4,8 @@ tox >= 3.12
 # uses pytest for testing
 pytest
 pytest-django
+
+# used for packaging
+twine
+bump2version
+build
