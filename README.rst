@@ -1,5 +1,5 @@
 ##############################################################################
-django-test-urls 0.0.1
+django-test-urls 0.1.0
 ##############################################################################
 
 This small Python package defines a small set of functions that can be used

@@ -20,4 +20,4 @@ __all__ = (
     'resolves_to_view',
 )
 
-VERSION = "0.0.1"
+VERSION = "0.1.0"
