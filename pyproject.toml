@@ -10,7 +10,7 @@ name = "django-test-urls"
 description="A package used to test URL dispatching in Django applications."
 readme = "README.rst"
 requires-python = ">=3.7"
-license = { file = "LICENSE" }
+license = { text = "MIT" }
 authors = [
   { name = "Alan Verresen", email = "dev@alanverresen.com" },
 ]
@@ -44,6 +44,10 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dynamic = ["version", "dependencies"]
+
+
+[project.urls]
+Homepage = "https://github.com/alanverresen/django-test-urls"
 
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html#setuptools-specific-configuration
