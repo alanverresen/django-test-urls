@@ -66,5 +66,5 @@ right view and that values are captured correctly.
 
     def test_monthly_archive():
         assert resolves_to_view("articles/2022/11/", views.month_archive)
-        assert resolves_to_args("articles/2022/11", {"year": 2022, "month": 11})
+        assert resolves_to_arguments("articles/2022/11", (), {"year": 2022, "month": 11})
 
