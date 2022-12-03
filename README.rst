@@ -60,7 +60,7 @@ right view and that values are captured correctly.
 
     # test_urls.py
     from django_test_urls import resolves_to_view
-    from django_test_urls import resolves_to_args
+    from django_test_urls import resolves_to_arguments
     from my_app import views
 
 
