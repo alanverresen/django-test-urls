@@ -17,13 +17,13 @@ from tests import app_views as views
 def test__matches_correct_view():
     """ Returns True when URL is mapped as expected.
     """
-    assert resolves_to_view("/articles/", views.articles)
+    assert resolves_to_view("/url1/", views.articles)
 
 
 def test__matches_wrong_view():
     """ Returns False when URL is mapped to a different view.
     """
-    assert not resolves_to_view("/articles/", views.monthly_archive)
+    assert not resolves_to_view("/url1/", views.monthly_archive)
 
 
 def test__matches_no_view():

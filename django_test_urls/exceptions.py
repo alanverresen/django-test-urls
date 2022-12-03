@@ -3,7 +3,7 @@
 
 """ Contains exceptions that may be raised by this package.
 
-:copyright: (c) 2022 by Alan Verresen.
+:copyright: (c) 2022 by Alan Verresen
 :license: MIT, see LICENSE for more details.
 """
 

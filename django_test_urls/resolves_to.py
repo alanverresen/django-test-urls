@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-""" Contains functionality to test the mapping of URLs to views and arguments.
+""" Contains functionality to test the mapping of URLs to views and parameters.
 
-:copyright: (c) 2022 by Alan Verresen.
+:copyright: (c) 2022 by Alan Verresen
 :license: MIT, see LICENSE for more details.
 """
 
-# DEV NOTE: CAPTURING VALUES WHEN USING BOTH NAMED AND UNNAMED REGEX GROUPS
+# DEV NOTE:
 # ----------------------------------------------------------------------------
-# The official Django docs explicitly mention that when both named and
-# unnamed/positional regex groups are used, the unnamed/positional arguments
-# are not captured.
+# It is important to be aware of the following (seemingly arbitrary) aspects
+# of URL dispatching in Django:
 #
+# - if unnamed regex groups are used in addition to named regex groups,
+#   then the values captured by unnamed regex groups are dropped by Django
+# - key-value pairs captured by named regex groups will be overwritten by
+#   key-value pairs with the same key specified as extra arguments
+# - extra arguments can be used in addition to unnamed regex groups, and in
+#   this case only, both `args` and `kwargs` will have values
+#
+# Django dropping values captured by unnamed regex groups
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # For example, the following URL pattern contains two unnamed regex groups
 # used for the year and the month, and one named regex group for the slug.
 #
@@ -25,30 +33,7 @@
 #   found.args == ()
 #   found.kwargs == {"slug": "hello-world"}
 #
-# So, Django only ever captures one type or the other. In order to help
-# prevent developers from making a mistake due to this behavior, functions
-# should only expose a single parameter for passing the expected arguments:
-#
-# - `dict` is used when testing the values captured by named groups
-# - `list` or `tuple` is used when the values captured by unnamed groups
-# - raise an exception when another data type is used to alert the developer
-#
-# There's a potential issue related to this approach that one needs to be wary
-# of. If the developer passes an empty instance of the wrong data type, an
-# incorrect implementation could accidentally return True if it blindly
-# compares the values that weren't captured and the expected values. In more
-# concrete terms, this comes down to the following situations:
-#
-# - URL pattern contains only named regex groups,
-#   BUT developer passes an empty `list` or `tuple` instance
-# - URL pattern contains only unnamed regex groups,
-#   BUT developer passes an empty `dict` instance
-#
-# Therefore, False should be returned when Django captures the values of the
-# named regex groups, but the test calls for checking against the values of
-# the unnamed regex groups, or vice versa.
-#
-# For reference, check out the link below:
+# For more information, check out the link below:
 # https://docs.djangoproject.com/en/dev/topics/http/urls/#using-unnamed-regular-expression-groups
 
 from django.urls import resolve as resolve_url
@@ -57,24 +42,22 @@ from django.urls.exceptions import Resolver404
 from .exceptions import InvalidArgumentType
 
 
-def resolves_to(url, expected_view, expected_args):
+def resolves_to(url, expected_view, expected_args, expected_kwargs):
     """ Checks whether URL is resolved to the expected view and arguments.
 
-    To distinguish between the use of named arguments and unnamed (or
-    positional) arguments, a dictionary should be used when checking against
-    named arguments and a list or tuple should be used when checking against
-    unnamed arguments. Note that Django does not capture unnamed arguments
-    when mixing named and unnamed arguments in a URL pattern.
+    Note that Django does not capture unnamed arguments when mixing named and
+    unnamed arguments in a URL pattern.
 
     :param str url: URL being mapped to a view and arguments
     :param function expected_view: expected view
-    :param tuple|list|dict expected_args: expected arguments
+    :param tuple|list expected_args: expected positional arguments
+    :param dict expected_kwargs: expected keyword arguments
     :rtype: bool
     :return: Is the URL mapped to a view and arguments as expected?
-    :raises InvalidArgumentType: arguments expressed using invalid type
+    :raises InvalidArgumentType: args or kwargs expressed using invalid type
     """
     return resolves_to_view(url, expected_view) and \
-        resolves_to_args(url, expected_args)
+        resolves_to_arguments(url, expected_args, expected_kwargs)
 
 
 def resolves_to_view(url, expected_view):
@@ -92,24 +75,25 @@ def resolves_to_view(url, expected_view):
     return found.func == expected_view
 
 
-def resolves_to_args(url, expected_args):
+def resolves_to_arguments(url, expected_args, expected_kwargs):
     """ Checks whether URL is resolved to the expected arguments.
 
-    To distinguish between the use of named arguments and unnamed (or
-    positional) arguments, a dictionary should be used when checking against
-    named arguments and a list or tuple should be used when checking against
-    unnamed arguments. Note that Django does not capture unnamed arguments
-    when mixing named and unnamed arguments in a URL pattern.
+    Note that Django does not capture unnamed arguments when mixing named and
+    unnamed arguments in a URL pattern.
 
     :param str url: URL being mapped to arguments
-    :param tuple|list|dict expected_args: expected arguments
+    :param tuple|list expected_args: expected positional arguments
+    :param dict expected_kwargs: expected keyword arguments
     :rtype: bool
     :return: Is the URL mapped to arguments as expected?
     :raises InvalidArgumentType: arguments expressed using invalid type
     """
-    if type(expected_args) not in {dict, tuple, list}:
+    if not isinstance(expected_args, (tuple, list)):
         raise InvalidArgumentType()
-    if type(expected_args) == list:
+    if not isinstance(expected_kwargs, dict):
+        raise InvalidArgumentType()
+
+    if isinstance(expected_args, list):
         expected_args = tuple(expected_args)
 
     try:
@@ -117,14 +101,7 @@ def resolves_to_args(url, expected_args):
     except Resolver404:
         return False
 
-    if len(found.args) == 0 and len(found.kwargs) == 0:
-        return len(expected_args) == 0
-    elif len(found.args) > 0 and type(expected_args) == tuple:
-        return found.args == expected_args
-    elif len(found.kwargs) > 0 and type(expected_args) == dict:
-        return found.kwargs == expected_args
-    else:
-        return False  # tried to check against wrong arguments
+    return expected_args == found.args and expected_kwargs == found.kwargs
 
 
 def resolves_to_404(url):

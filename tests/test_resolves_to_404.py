@@ -21,4 +21,4 @@ def test__resolves_to_404__no_match_with_view():
 def test__resolves_to_404__match_with_view():
     """ Returns False when URL can be mapped to a view.
     """
-    assert not resolves_to_404("/articles/")
+    assert not resolves_to_404("/url1/")

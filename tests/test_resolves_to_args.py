@@ -5,250 +5,448 @@
 
 # Test Design
 # -----------
-# There are several situations that one needs to consider, depending on
-# the groups used in a URL pattern to capture arguments:
-# - contains no groups to capture arguments
-# - contains unnamed groups to capture unnamed arguments
-# - contains named groups to capture named arguments
-# - contains both named and unnamed group to capture arguments
-#   (in this case, only named groups are captured, not unnamed groups!)
+# There are 8 different types of URL patterns that need to be tested,
+# depending on the combination of types of groups that are used to capture
+# arguments:
+# - named groups (y/n)
+# - unnamed groups (y/n)
+# - extra arguments (y/n)
 #
-# For each situation, the following cases should be tested; not that
-# multiple variants per case are possible:
-# - values of captured groups match expected values (-> TRUE)
-# - values of captured groups do not match expected values (-> FALSE)
-# - checking named instead of unnamed groups, or vice versa (-> FALSE)
+# For each combination, the following cases should be tested:
+# - correct/incorrect args
+# - correct/incorrect kwargs
 #
-# Additional test cases are warranted for the following circumstances that
-# one should be careful of:
-# - if Django captured unnamed groups, but an empty `dict` was passed,
-#   then an improper implementation might check the named groups that were
-#   captured (none!) against the empty `dict` and incorrectly return True
-#   instead of False
-# - if Django captured named args, but an empty `list` or `tuple` was
-#   passed, then an improper implementation might check the unnamed groups
-#   that were captured (none!) against the empty `list` or `tuple` and
-#   incorrectly return True instead of False
+# Extra Cases
+# ~~~~~~~~~~~
+# When a URL doesn't match with a single URL pattern, there is no URL pattern
+# available to extract arguments with. A test case needs to make sure that
+# False is returned in this case.
 #
-# Also, when a URL pattern contains both named and unnamed groups, it is
-# important to keep in mind that the arguments of unnamed groups are never
-# captured, and thus cannot be checked against. Thus, we need to test that
-# uncaptured groups cannot be checked against.
+# All tests are written with tuples; add an extra test to make sure that a
+# list can be used instead of a tuple to express the args.
 #
-# Also, when a URL doesn't match with a single URL pattern, there is no
-# URL pattern to work off of. A test case needs to make sure that False
-# is returned in this case.
+# When an invalid data type is used to express the expected args or kwargs,
+# then an exception should be raised.
 #
-# Last but not least, tests are also needed to cover the situation where
-# an invalid data type (not `dict`, `tuple`, or `list`) is used to express
-# the expected arguments.
+# When a URL has a named regex group and an extra argument with the same key,
+# then the extra argument's value should overwrite the one captured by the
+# named regex group.
+#
+# Problems involving mismatches between the captured values and view
+# parameters should result in an exception being raised down the line.
+# However, at this stage, args and kwargs should be captured as expected.
+#
 
-from pytest import raises
+import pytest
 
-from django_test_urls import resolves_to_args
+from django_test_urls import resolves_to_arguments
 from django_test_urls.exceptions import InvalidArgumentType
 
 
-def test__resolves_to_args__url_with_no_args__match_tuple():
-    """ Returns True when a URL without arguments is checked against an
-        empty tuple.
+# ----------------------------------------------------------------------------
+# URL PATTERN WITH NO NAMED OR UNNAMED GROUPS OR EXTRA ARGUMENTS
+# ----------------------------------------------------------------------------
+
+def test__pattern1__matching_values():
+    """ Returns True when a URL pattern with no named groups, no unnamed
+        groups, and no extra args is checked against matching values.
     """
-    assert resolves_to_args("/articles/", ())
+    assert resolves_to_arguments("/url1/", (), {})
 
 
-def test__resolves_to_args__url_with_no_args__match_list():
-    """ Returns True when a URL without arguments is checked against an
-        empty list.
+def test__pattern1__mismatching_values__bad_tuple():
+    """ Returns False when a URL pattern with no named groups, no unnamed
+        groups, and no extra args is checked against a non-empty tuple.
     """
-    assert resolves_to_args("/articles/", [])
+    assert not resolves_to_arguments("/url1/", ("a",), {})
 
 
-def test__resolves_to_args__url_with_no_args__match_dict():
-    """ Returns True when a URL without arguments is checked against an
-        empty dict.
+def test__pattern1__mismatching_values__bad_dict():
+    """ Returns False when a URL pattern with no named groups, no unnamed
+        groups, and no extra args is checked against a non-empty dict.
     """
-    assert resolves_to_args("/articles/", {})
+    assert not resolves_to_arguments("/url1/", (), {"a": "b"})
 
 
-def test__resolves_to_args__url_with_no_args__mismatch_tuple():
-    """ Returns False when a URL without arguments is checked against a
-        non-empty tuple.
+def test__pattern1__mismatching_values__bad_all():
+    """ Returns False when a URL pattern with no named groups, no unnamed
+        groups, and no extra args is checked against all bad values.
     """
-    assert not resolves_to_args("/articles/", ("nope",))
-
-
-def test__resolves_to_args__url_with_no_args__mismatch_list():
-    """ Returns False when a URL without arguments is checked against a
-        non-empty list.
-    """
-    assert not resolves_to_args("/articles/", ["nope"])
-
-
-def test__resolves_to_args__url_with_no_args__mismatch_dict():
-    """ Returns False when a URL without arguments is checked against a
-        dictionary with the right values.
-    """
-    assert not resolves_to_args("/articles/", {"a": "nope"})
+    assert not resolves_to_arguments("/url1/", ("a",), {"b": "c"})
 
 
 # ----------------------------------------------------------------------------
+# URL PATTERN WITH NAMED GROUPS
+# ----------------------------------------------------------------------------
 
-def test__url_with_unnamed_args__match_tuple():
-    """ Returns True when a URL with unnamed arguments is checked against
-        a tuple with matching values.
+def test__pattern2__matching_values():
+    """ Returns True when a URL pattern with named groups is checked against
+        matching values.
     """
-    assert resolves_to_args("/articles/2020/03", ("2020", "03"))
+    assert resolves_to_arguments(
+        "/url2/2022/11/", (), {"year": "2022", "month": "11"})
 
 
-def test__url_with_unnamed_args__match_list():
-    """ Returns True when a URL with unnamed arguments is checked against
-        a list with matching values.
+def test__pattern2__mismatching_values__bad_tuple():
+    """ Returns False when a URL pattern with named groups is checked against
+        a tuple with mismatching values.
     """
-    assert resolves_to_args("/articles/2020/03", ["2020", "03"])
+    assert not resolves_to_arguments(
+        "/url2/2022/11/", ("a",), {"year": "2022", "month": "11"})
 
 
-def test__url_with_unnamed_args__mismatch_tuple():
-    """ Returns False when a URL with unnamed arguments is checked against
-        a tuple with non-matching values.
+def test__pattern2__mismatching_values__bad_dict():
+    """ Returns False when a URL pattern with named groups is checked against
+        a dict with mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03", ("2020", "05"))
+    assert not resolves_to_arguments(
+        "/url2/2022/11/", (), {"year": "1970", "month": "01"})
 
 
-def test__url_with_unnamed_args__mismatch_list():
-    """ Returns False when a URL with unnamed arguments is checked against
-        a list with non-matching values.
+def test__pattern2__mismatching_values__bad_all():
+    """ Returns False when a URL pattern with named groups is checked against
+        all bad values.
     """
-    assert not resolves_to_args("/articles/2020/03", ["2021", "03"])
-
-
-def test__url_with_unnamed_args__mismatch_dict():
-    """ Returns False when a URL with unnamed arguments is checked against
-        the right values, but the wrong data type is used.
-    """
-    assert not resolves_to_args("/articles/2020/03", {0: "2020", 1: "03"})
-
-
-def test__url_with_positional_args__mismatch_empty_dict():
-    """ Returns False when a URL with unnamed arguments is checked against
-        an empty dictionary.
-    """
-    assert not resolves_to_args("/articles/2020/03", {})
+    assert not resolves_to_arguments(
+        "/url2/2022/11/", ("a",), {"year": "1970", "month": "01"})
 
 
 # ----------------------------------------------------------------------------
+# URL PATTERN WITH UNNAMED GROUPS
+# ----------------------------------------------------------------------------
 
-def test__url_with_named_args__match():
-    """ Returns True when a URL with named arguments is checked against a
-        dictionary with matching values.
+def test__pattern3__matching_values():
+    """ Returns True when a URL pattern with unnamed groups is checked against
+        matching values.
     """
-    assert resolves_to_args("/articles/food", {"category": "food"})
+    assert resolves_to_arguments("/url3/2022/11/", ("2022", "11"), {})
 
 
-def test__url_with_named_args__mismatch_dict():
-    """ Returns False when a URL with named arguments is checked against a
-        dictionary with non-matching values.
+def test__pattern3__mismatching_values__bad_tuple():
+    """ Returns False when a URL pattern with unnamed groups is checked
+        against a tuple with mismatching values.
     """
-    assert not resolves_to_args("/articles/food", {"category": "movies"})
+    assert not resolves_to_arguments("/url3/2022/11/", ("1970", "01"), {})
 
 
-def test__url_with_named_args__mismatch_tuple():
-    """ Returns False when a URL with named arguments is checked against a
-        tuple with the right values.
+def test__pattern3__mismatching_values__bad_dict():
+    """ Returns False when a URL pattern with unnamed groups is checked
+        against a dict with mismatching values.
     """
-    assert not resolves_to_args("/articles/food", ("movies",))
+    assert not resolves_to_arguments(
+        "/url3/2022/11/", ("2022", "11"), {"a": "b"})
 
 
-def test__url_with_named_args__mismatch_list():
-    """ Returns False when a URL with named arguments is checked against a
-        list with the right values.
+def test__pattern3__mismatching_values__bad_all():
+    """ Returns False when a URL pattern with unnamed groups is checked
+        against a dict with mismatching values.
     """
-    assert not resolves_to_args("/articles/food", ["movies"])
-
-
-def test__url_with_named_args__mismatch_empty_tuple():
-    """ Returns False when a URL with named arguments is checked against
-        an empty tuple.
-    """
-    assert not resolves_to_args("/articles/food", ())
-
-
-def test__url_with_named_args__mismatch_empty_list():
-    """ Returns False when a URL with named arguments is checked against
-        an empty tuple.
-    """
-    assert not resolves_to_args("/articles/food", [])
+    assert not resolves_to_arguments(
+        "/url3/2022/11/", ("1970", "01"), {"a": "b"})
 
 
 # ----------------------------------------------------------------------------
+# URL PATTERN WITH EXTRA ARGUMENTS
+# ----------------------------------------------------------------------------
 
-def test__url_with_both_args__match():
-    """ Returns True when a URL with both named and unnamed arguments is
-        checked against a dict with values matching named arguments.
+def test__pattern4__matching_values():
+    """ Returns True when a URL pattern with extra arguments is checked
+        against matching values.
     """
-    assert resolves_to_args("/articles/2020/03/hello", {'slug': 'hello'})
+    assert resolves_to_arguments(
+        "/url4/two-zero-two-two/one-one/",
+        (),
+        {"year": "2022", "month": "11"})
 
 
-def test__url_with_both_args__mismatch_dict():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against a dict with values not matching named arguments.
+def test__pattern4__mismatching_values__bad_tuple():
+    """ Returns False when a URL pattern with extra arguments is checked
+        against a tuple with mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", {'slug': 'bye'})
+    assert not resolves_to_arguments(
+        "/url4/two-zero-two-two/one-one/",
+        ("a",),
+        {"year": "2022", "month": "11"})
 
 
-def test__url_with_mixed_args__mismatch_tuple():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against a tuple with values matching unnamed arguments.
+def test__pattern4__mismatching_values__bad_dict():
+    """ Returns False when a URL pattern with extra arguments is checked
+        against a dict with mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", ("hello",))
+    assert not resolves_to_arguments(
+        "/url4/two-zero-two-two/one-one/",
+        (),
+        {"year": "1970", "month": "01"})
 
 
-def test__url_with_mixed_args__mismatch_list():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against a list with values matching unnamed arguments.
+def test__pattern4__mismatching_values__bad_all():
+    """ Returns False when a URL pattern with extra arguments is checked
+        against mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", ["hello"])
+    assert not resolves_to_arguments(
+        "/url4/two-zero-two-two/one-one/",
+        ("a",),
+        {"year": "1970", "month": "01"})
 
 
-def test__url_with_mixed_args__mismatch_empty_tuple():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against an empty tuple.
+# ----------------------------------------------------------------------------
+# URL PATTERN WITH NAMED AND UNNAMED GROUPS
+# ----------------------------------------------------------------------------
+
+def test__pattern5__matching_values():
+    """ Returns True when a URL with both named and unnamed groups is checked
+        against matching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", ())
+    assert resolves_to_arguments("/url5/2022/11/hello", (), {'slug': 'hello'})
 
 
-def test__url_with_mixed_args__mismatch_empty_list():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against an empty list.
+def test__pattern5__mismatching_values__bad_tuple():
+    """ Returns False when a URL with both named and unnamed groups is checked
+        against a tuple with mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", [])
+    assert not resolves_to_arguments(
+        "/url5/2022/11/hello",
+        ("2022", "11"),  # values aren't captured by Django!
+        {'slug': 'hello'})
 
 
-def test__url_with_mixed_args__checking_against_unnamed_tuple():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against a tuple of values of unnamed groups.
+def test__pattern5__mismatching_values__bad_dict():
+    """ Returns False when a URL with both named and unnamed groups is checked
+        against a dict with mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", ("2020", "03"))
+    assert not resolves_to_arguments(
+        "/url5/2022/11/hello", (), {'slug': 'bye'})
 
 
-def test__url_with_mixed_args__checking_against_unnamed_list():
-    """ Returns False when a URL with both named and unnamed arguments is
-        checked against a list of values of unnamed groups.
+def test__pattern5__mismatching_values__bad_all():
+    """ Returns False when a URL with both named and unnamed groups is checked
+        against mismatching values.
     """
-    assert not resolves_to_args("/articles/2020/03/hello", ["2020", "03"])
+    assert not resolves_to_arguments(
+        "/url/2022/11/hello",
+        ("2022", "11"),  # values aren't captured by Django!
+        {'slug': 'bye'})
 
 
+# ----------------------------------------------------------------------------
+# URL PATTERN WITH NAMED GROUPS AND EXTRA ARGUMENTS
+# ----------------------------------------------------------------------------
+
+def test__pattern6__matching_values():
+    """ Returns True when a URL with named groups and extra arguments is
+        checked against matching values.
+    """
+    assert resolves_to_arguments(
+        "/url6/two-zero-two-two/11/", (), {"year": "2022", "month": "11"})
+
+
+def test__pattern6__mismatching_values__bad_tuple():
+    """ Returns False when a URL with named groups and extra arguments is
+        checked against a tuple with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url6/two-zero-two-two/11/", ("a",), {"year": "2022", "month": "11"})
+
+
+def test__pattern6__mismatching_values__bad_dict():
+    """ Returns False when a URL with named groups and extra arguments is
+        checked against a dict with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url6/two-zero-two-two/11/", (), {"year": "1970", "month": "03"})
+
+
+def test__pattern6__mismatching_values__bad_all():
+    """ Returns False when a URL with named groups and extra arguments is
+        checked against mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url6/two-zero-two-two/11/", ("a",), {"year": "1970", "month": "03"})
+
+
+# ----------------------------------------------------------------------------
+# URL PATTERN WITH UNNAMED GROUPS AND EXTRA ARGUMENTS
+# ----------------------------------------------------------------------------
+
+def test__pattern7__matching_values():
+    """ Returns True when a URL with unnamed groups and extra arguments is
+        checked against matching values.
+    """
+    assert resolves_to_arguments(
+        "/url7/two-zero-two-two/11/", ("11",), {"year": "2022"})
+
+
+def test__pattern7__mismatching_values__bad_tuple():
+    """ Returns False when a URL with unnamed groups and extra arguments is
+        checked against a tuple with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url7/two-zero-two-two/11/", ("a",), {"year": "2022"})
+
+
+def test__pattern7__mismatching_values__bad_dict():
+    """ Returns False when a URL with unnamed groups and extra arguments is
+        checked against a dict with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url7/two-zero-two-two/11/", ("11",), {"year": "1970"})
+
+
+def test__pattern7__mismatching_values__bad_all():
+    """ Returns False when a URL with unnamed groups and extra arguments is
+        checked against mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url7/two-zero-two-two/11/", ("a",), {"year": "1970"})
+
+
+# ----------------------------------------------------------------------------
+# URL PATTERN WITH NAMED AND UNNAMED GROUPS AND EXTRA ARGUMENTS
+# ----------------------------------------------------------------------------
+
+def test__pattern8__matching_values():
+    """ Return True when a URL with named groups, unnamed groups, and extra
+        arguments is checked against matching values.
+    """
+    assert resolves_to_arguments(
+        "/url8/two-zero-two-two/11/hello",
+        (),
+        {"slug": "hello", "year": "2022"})
+
+
+def test__pattern8__mismatching_values__bad_tuple():
+    """ Return False when a URL with named groups, unnamed groups, and extra
+        arguments is checked against a tuple with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url8/two-zero-two-two/11/hello",
+        ("11",),  # values aren't captured by Django!
+        {"slug": "hello", "year": "2022"})
+
+
+def test__pattern8__mismatching_values__bad_dict():
+    """ Return False when a URL with named groups, unnamed groups, and extra
+        arguments is checked against a dict with mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url8/two-zero-two-two/11/hello",
+        (),
+        {"slug": "bye", "year": "1970"})
+
+
+def test__pattern8__mismatching_values__bad_all():
+    """ Return False when a URL with named groups, unnamed groups, and extra
+        arguments is checked against mismatching values.
+    """
+    assert not resolves_to_arguments(
+        "/url8/two-zero-two-two/11/hello",
+        ("11",),  # values aren't captured by Django!
+        {"slug": "bye", "year": "1970"})
+
+
+# ----------------------------------------------------------------------------
+# USING LIST INSTEAD OF TUPLE
+# ----------------------------------------------------------------------------
+
+def test__using_list_instead_of_tuple_for_args():
+    """ Can use a list instead of a tuple for `args` parameter.
+    """
+    assert resolves_to_arguments("/url3/2022/11/", ["2022", "11"], {})
+
+
+# ----------------------------------------------------------------------------
+# NO MATCHING VIEW
 # ----------------------------------------------------------------------------
 
 def test__url_does_not_match_any_pattern():
     """ Returns False when a URL does not match any URL pattern.
     """
-    assert not resolves_to_args("/this/url/does/not/match/any/pattern", [])
+    assert not resolves_to_arguments("/no/such/url/", (), {})
+    assert not resolves_to_arguments("/no/such/url/", ("a",), {})
 
 
 # ----------------------------------------------------------------------------
+# INVALID ARGUMENT TYPE PASSED
+# ----------------------------------------------------------------------------
 
-def test__invalid_argument_type():
-    """ Exception is raised when no matching view is found for URL.
+def test__invalid_argument_type__args():
+    """ Exception is raised when wrong data type is used to express args.
     """
-    with raises(InvalidArgumentType):
-        assert not resolves_to_args("/articles/2020/03", {"2020", "03"})
+    with pytest.raises(InvalidArgumentType):
+        assert not resolves_to_arguments("/url3/2022/11/", {"2022", "11"}, {})
+
+
+def test__invalid_argument_type__kwargs():
+    """ Exception is raised when wrong data type is used to express kwargs.
+    """
+    with pytest.raises(InvalidArgumentType):
+        resolves_to_arguments("/url2/2022/11/", (), {"2022", "11"})
+
+
+# ----------------------------------------------------------------------------
+# EXTRA ARGUMENT OVERWRITES KWARGS
+# ----------------------------------------------------------------------------
+
+def test__extra_arg_overwrites_keyword_arg__check_against_extra():
+    """ True is returned when a URL that overwrites a captured kwarg is
+        checked against the value of the extra argument.
+    """
+    assert resolves_to_arguments(
+        "/bad1/1980/11/",
+        (),
+        {"year": "2022", "month": "11"})
+
+
+def test__extra_arg_overwrites_keyword_arg__check_against_keyword():
+    """ False is returned when a URL that overwrites a captured kwarg is
+        checked against the value of the keyword argument.
+    """
+    assert not resolves_to_arguments(
+        "/bad1/1980/11/",
+        (),
+        {"year": "1980", "month": "11"})
+
+
+# ----------------------------------------------------------------------------
+# MISMATCHES BETWEEN CAPTURED VALUES AND VIEW PARAMETERS
+# ----------------------------------------------------------------------------
+
+def test__mapping_parameters_mismatch__pos_key_args_collision():
+    """ True is returned, even when captured args and kwargs will cause an
+        exception in the future due to multiple arguments being mapped to the
+        same parameter of a view. This situation can only occur when extra
+        arguments are provided in addition to unnamed regex groups.
+    """
+    assert resolves_to_arguments(
+        "/bad2/1970/11/", ("1970", "11"), {"year": "2022"})
+
+
+def test__mapping_parameters_mismatch__missing_positional_value():
+    """ True is returned, even when captured args and kwargs will cause an
+        exception in the future due to capturing fewer values than needed to
+        fill a positional parameter of a view.
+    """
+    assert resolves_to_arguments("/bad3/2022/", ("2022",), {})
+
+
+def test__mapping_parameters_mismatch__missing_key_value_pair():
+    """ True is returned, even when captured args and kwargs will cause an
+        exception in the future due to not capturing the key-value pair needed
+        to fill a keyword parameter of a view.
+    """
+    assert resolves_to_arguments("/bad4/2022/", (), {"year": "2022"})
+
+
+def test__mapping_parameters_mismatch__unused_positional_value():
+    """ True is returned, even when captured args and kwargs will cause an
+        exception in the future due to an additional positional value.
+    """
+    assert resolves_to_arguments("/bad5/2022/11/01/", ("2022", "11", "01"), {})
+
+
+def test__mapping_parameters_mismatch__unused_keyword_value():
+    """ True is returned, even when captured args and kwargs will cause an
+        exception in the future due to an additional keyword value.
+    """
+    assert resolves_to_arguments(
+        "/bad6/2022/11/01/", (), {"year": "2022", "month": "11", "day": "01"})
