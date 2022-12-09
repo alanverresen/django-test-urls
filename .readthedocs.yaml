@@ -21,7 +21,7 @@ sphinx:
 # Declare the Python requirements required to build your docs
 python:
    install:
-   - requirements: docs/requirements.txt
+   - requirements: requirements.txt
 
 
 # No need to use submodules to build documentation.
