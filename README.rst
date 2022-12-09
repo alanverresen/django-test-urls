@@ -20,6 +20,7 @@ to test the mapping of URLs in a Django application:
 * whether a URL is mapped correctly to a view
 * whether a URL is not mapped to a view
 * whether arguments are captured as expected
+* detects mismatches between captured arguments and view's parameters
 
 
 ==============================================================================
@@ -54,17 +55,15 @@ values, `year` and `month`, to pass along.
 
 
 The following test verifies that an example URL is mapped correctly to the
-right view and that values are captured correctly.
+correct view and that arguments are captured as expected.
 
 .. code-block:: python
 
     # test_urls.py
-    from django_test_urls import resolves_to_view
-    from django_test_urls import resolves_to_arguments
+    from django_test_urls import resolves_to
     from my_app import views
 
 
     def test_monthly_archive():
-        assert resolves_to_view("articles/2022/11/", views.month_archive)
-        assert resolves_to_arguments("articles/2022/11", (), {"year": 2022, "month": 11})
+        assert resolves_to("articles/2022/11/", views.month_archive, (), {"year": 2022, "month": 11})
 
