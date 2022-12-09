@@ -1,5 +1,5 @@
 ##############################################################################
-django-test-urls 0.2.0
+django-test-urls 0.3.0
 ##############################################################################
 
 .. image:: https://github.com/alanverresen/django-test-urls/actions/workflows/build.yml/badge.svg
