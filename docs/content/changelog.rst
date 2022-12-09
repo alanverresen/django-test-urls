@@ -26,7 +26,10 @@ Unreleased
 
 The following changes are planned to happen in the future:
 
-- Report mismatches between captured values and the parameters of a view.
+- Warn the user when trying to test a URL with both named and unnamed regex
+  groups, and asserting that positional arguments are captured.
+- Add support for class-based views.
+- Add support for generic views.
 
 
 Rejected
@@ -35,6 +38,20 @@ Rejected
 The following features and/or changes have been rejected:
 
 - Nothing has been rejected so far.
+
+
+0.3.0 - 2022-12-10
+------------------
+
+ADDED
+~~~~~
+- Added functionality for reporting mismatches between captured arguments and
+  a view's parameters.
+
+CHANGED
+~~~~~~~
+- The functions `resolves_to_view` and `resolves_to_arguments` aren't part
+  anymore of this package's public API; should only be used internally.
 
 
 0.2.0 - 2022-12-04

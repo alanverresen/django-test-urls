@@ -12,5 +12,9 @@ def monthly_archive(request, year, month):
     return HttpResponse("<h1>Monthly Archive</h1>")
 
 
+def other_monthly_archive(request, year, month):
+    return HttpResponse("<h1>Other Monthly Archive</h1>")
+
+
 def article(request, slug):
     return HttpResponse("<h1>Article</h1>")

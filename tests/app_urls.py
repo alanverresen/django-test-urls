@@ -3,6 +3,7 @@
 
 from django.urls import path
 from django.urls import re_path
+from django.views.generic import TemplateView
 
 from tests import app_views as views
 
@@ -100,6 +101,12 @@ urlpatterns = [
     re_path(
         route=r"^bad6/(?P<year>[0-9]{4})/(?P<month>0[1-9]|1[0-2])/(?P<day>[0-9]{2})/$",  # noqa: E501
         view=views.monthly_archive,
+    ),
+
+    # an example of a class-based view with initial keyword arguments
+    path(
+        route=r"^cbv1/(?P<year>[0-9]{4})/(?P<month>0[1-9]|1[0-2])/",
+        view=TemplateView.as_view(template_name="no-such-file.html"),
     ),
 
 ]

@@ -10,7 +10,7 @@
 # - URL is mapped to a different view
 # - URL cannot be mapped to a view
 
-from django_test_urls import resolves_to_view
+from django_test_urls.resolves_to import resolves_to_view
 from tests import app_views as views
 
 

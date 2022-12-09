@@ -9,7 +9,17 @@
 # solely on whether the URL can be mapped to an existing view or not. As such,
 # only two tests are needed to cover these cases.
 
-from django_test_urls import resolves_to_404
+import pytest
+
+from django_test_urls.resolves_to import resolves_to_404
+from django_test_urls.exceptions import InvalidArgumentType
+
+
+def test__resolves_to_404__invalid_argument_type__url_path():
+    """ Raises an exception when the URL isn't expressed as a `str`.
+    """
+    with pytest.raises(InvalidArgumentType):
+        resolves_to_404(None)
 
 
 def test__resolves_to_404__no_match_with_view():

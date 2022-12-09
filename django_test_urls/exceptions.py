@@ -18,3 +18,10 @@ class InvalidArgumentType(DjangoTestUtilsException):
     """ Used to signal that an argument with an unexpected type was passed.
     """
     pass
+
+
+class ArgumentParameterMismatch(DjangoTestUtilsException):
+    """ Used to signal that there's a mismatch between the captured arguments
+        and the parameters of a view.
+    """
+    pass

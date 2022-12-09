@@ -22,25 +22,15 @@
 # available to extract arguments with. A test case needs to make sure that
 # False is returned in this case.
 #
-# All tests are written with tuples; add an extra test to make sure that a
-# list can be used instead of a tuple to express the args.
-#
-# When an invalid data type is used to express the expected args or kwargs,
-# then an exception should be raised.
-#
 # When a URL has a named regex group and an extra argument with the same key,
 # then the extra argument's value should overwrite the one captured by the
 # named regex group.
 #
 # Problems involving mismatches between the captured values and view
-# parameters should result in an exception being raised down the line.
+# parameters should result in an exception being raised LATER down the line.
 # However, at this stage, args and kwargs should be captured as expected.
-#
 
-import pytest
-
-from django_test_urls import resolves_to_arguments
-from django_test_urls.exceptions import InvalidArgumentType
+from django_test_urls.resolves_to import resolves_to_arguments
 
 
 # ----------------------------------------------------------------------------
@@ -345,16 +335,6 @@ def test__pattern8__mismatching_values__bad_all():
 
 
 # ----------------------------------------------------------------------------
-# USING LIST INSTEAD OF TUPLE
-# ----------------------------------------------------------------------------
-
-def test__using_list_instead_of_tuple_for_args():
-    """ Can use a list instead of a tuple for `args` parameter.
-    """
-    assert resolves_to_arguments("/url3/2022/11/", ["2022", "11"], {})
-
-
-# ----------------------------------------------------------------------------
 # NO MATCHING VIEW
 # ----------------------------------------------------------------------------
 
@@ -363,24 +343,6 @@ def test__url_does_not_match_any_pattern():
     """
     assert not resolves_to_arguments("/no/such/url/", (), {})
     assert not resolves_to_arguments("/no/such/url/", ("a",), {})
-
-
-# ----------------------------------------------------------------------------
-# INVALID ARGUMENT TYPE PASSED
-# ----------------------------------------------------------------------------
-
-def test__invalid_argument_type__args():
-    """ Exception is raised when wrong data type is used to express args.
-    """
-    with pytest.raises(InvalidArgumentType):
-        assert not resolves_to_arguments("/url3/2022/11/", {"2022", "11"}, {})
-
-
-def test__invalid_argument_type__kwargs():
-    """ Exception is raised when wrong data type is used to express kwargs.
-    """
-    with pytest.raises(InvalidArgumentType):
-        resolves_to_arguments("/url2/2022/11/", (), {"2022", "11"})
 
 
 # ----------------------------------------------------------------------------
