@@ -65,5 +65,5 @@ correct view and that arguments are captured as expected.
 
 
     def test_monthly_archive():
-        assert resolves_to("articles/2022/11/", views.month_archive, (), {"year": 2022, "month": 11})
+        assert resolves_to("/articles/2022/11/", views.month_archive, (), {"year": 2022, "month": 11})
 
